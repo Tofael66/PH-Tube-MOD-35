@@ -13,49 +13,81 @@
     .catch ((error) => console.log(error))
 }
 
-loadCaterigories()
 
 
+
+// active btn calss remove
+const removeActiveClass = () => {
+ const buttons = document.getElementsByClassName("category-btn") ;
+ console.log(buttons) ;
+ for( let btn of buttons){
+  btn.classList.remove("active") ;
+ }
+}
 
 
 
  // 3- create displayCategories 
- 
 const displayCategories = (categories) => {
 
     const cateriContainer = document.getElementById('categories')
     
 // category: "Music"
 // category_id: "1001"
-    
- categories.forEach( (item) => {
-    
+
+    // serial-10
+ categories.forEach( (item) => {  
     console.log(item) ;
 
-    //create a buton 
-    const button = document.createElement("button") ;
-    button.classList = 'btn'
-    button.innerText = item.category ;
+ //create a buton 
+    const buttonContainer = document.createElement("div") ;
+    buttonContainer.innerHTML = `
+    <button id="btn-${item.category_id}" onclick="loadCaterigoriesVideos(${item.category_id})" class="btn  category-btn"> ${item.category}</button>
 
-
+    `
+   
+   
     // add button to category container 
-    cateriContainer.appendChild(button) ;
+    cateriContainer.appendChild( buttonContainer) ;
  });
 }
 
-// displayCategories()
+
 
 
 //loadvideos
 
-const loadVideos = () =>{
-    fetch("https://openapi.programming-hero.com/api/phero-tube/videos") 
+const loadVideos = (searchText = "") =>{
+    fetch(`https://openapi.programming-hero.com/api/phero-tube/videos?title=${searchText}`) 
     .then((res) => res.json())
     .then((data) => displayLoad(data.videos)) 
     .catch((err) => console.log(err))
 }
 
-loadVideos()
+
+
+// serial-11
+
+const loadCaterigoriesVideos =(id) =>{
+  // alert(id) ;
+    fetch(`https://openapi.programming-hero.com/api/phero-tube/category/${id}`) 
+    .then((res) => res.json())
+    .then((data) => {
+      // sob btn a active class remove koro
+ removeActiveClass()
+      // id ar class k active koro 
+      const activeBtn = document.getElementById(`btn-${id}`)
+      // console.log(activeBtn) ;
+      activeBtn.classList.add('active');
+      displayLoad(data.category)
+    })  
+    .catch((err) => console.log(err))
+
+
+
+}
+
+
 
 // time setup st
 
@@ -75,9 +107,31 @@ function getTimeSpend(time){
 // display shaow videos
 
 const displayLoad = ((videos) => {
-    const videoContainer = document.getElementById('videos')
+    const videoContainer = document.getElementById('videos') ;
+     videoContainer.innerHTML = " " ;
+       
+     if(videos.length == 0){
+      videoContainer.classList.remove("grid") ;
+      videoContainer.innerHTML = `
+      <div class="min-h-[300px] w-full flex flex-col  gap-5 justify-center items-center ">
+
+      <img src="Icon.png "/>
+      <h2 class = "text-center text-xl font-bold "> No Content Here in this Category </h2>
+      </div>
+      
+      ` ;
+      return ; 
+     }
+
+     else{
+
+      videoContainer.classList.add("grid") ;
+
+     }
+
+
   videos.forEach((video) => {
-    console.log(video)
+     // console.log(video)
 
     const card =document.createElement('div') ;
     card.classList = "card card-compact "
@@ -104,9 +158,8 @@ const displayLoad = ((videos) => {
 <p class = "text-gray-400">${video.authors[0].profile_name}</p>
 ${video.authors[0].verified === true ?  `<img class ="w-5 "  src="https://img.icons8.com/?size=48&id=91kLZWvmd4sg&format=png"/>` :""}
 
-
 </div>
-    <p></p>
+    <p> <button onclick="loadDetails('${video.video_id}')"  class ="btn btn-sm btn-error">details</button></p>
     </div>
 
     </div>
@@ -120,8 +173,40 @@ ${video.authors[0].verified === true ?  `<img class ="w-5 "  src="https://img.ic
 })
 
 
+// load video details 
+const loadDetails =async (videoId) =>{
+   // console.log(videoId)
+   const url =`https://openapi.programming-hero.com/api/phero-tube/video/${videoId}` ;
 
+   const res = await fetch(url) ;
+   const data = await res.json() ;
+    // console.log(data)
+    dipayDetails(data.video)
+} ;
 
+const dipayDetails =(video) => {
+  console.log(video)
+  const detailsContainer = document.getElementById('modal-content') ;
+  
+  // ata 2 vabe dekano jay jomon:
+  // way-1
+  // document.getElementById("showModalData").click();
+  // way-2
+  document.getElementById("customModal").showModal() ;
+   detailsContainer.innerHTML =`
+   <img src =${video.thumbnail}/>
+   <p>${video.description}</p>
+   `
+
+}
+
+//  search kor
+document.getElementById("search-input").addEventListener("keyup", (e) =>{
+  loadVideos(e.target.value) ;
+}) ;
+
+loadCaterigories()
+loadVideos()
 // demo
 // {
 //     "category_id": "1001",
